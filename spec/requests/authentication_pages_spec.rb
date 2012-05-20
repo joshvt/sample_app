@@ -36,9 +36,17 @@ describe "AuthenticationPages" do
       it { should have_link('Sign out', href: signout_path) }
       it { should_not have_link('Sign in', href: signin_path) }
 
+      describe "followed by signup page request" do
+        before { visit signup_path }
+        it { should_not have_link('Sign up now!', href: signup_path) }
+      end
+
+
       describe "followed by signout" do
         before { click_link "Sign out" }
         it { should have_link('Sign in') }
+        it { should_not have_link('Profile',  href: user_path(user)) }
+        it { should_not have_link('Settings', href:  edit_user_path(user) ) }
       end
     end
   end
@@ -59,6 +67,22 @@ describe "AuthenticationPages" do
 
     describe "for non-signed-in users" do
       let(:user) { FactoryGirl.create(:user) }
+
+      describe "in the Microposts controller" do
+
+        describe "submitting to the create action" do
+          before { post microposts_path }
+          specify { response.should redirect_to(signin_path) }
+        end
+
+        describe "submitting to the destroy action" do
+          before do
+            micropost = FactoryGirl.create(:micropost)
+            delete micropost_path(micropost)
+          end
+          specify { response.should redirect_to(signin_path) }
+        end
+      end
 
       describe "when attempting to visit a protected page" do
         before do
